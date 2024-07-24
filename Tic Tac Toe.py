@@ -126,7 +126,6 @@ def expertAi(board, turn , change):
     return randomAi(board)
 
 def perfectAi(boardAi, turn, change):
-    boardTuple = tuple(tuple(row) for row in boardAi)
     if boardAi == newBoard():
         return 5
     if turn:
@@ -144,15 +143,21 @@ def perfectAi(boardAi, turn, change):
             b2 = makeMove(boardAi, turn, i, change)
             result = bestPlay(b2, abs(turn-1), change, player, inverse)
             if result >= bestScore:
+                boardTuple = tuple(tuple(row) for row in copy.deepcopy(boardAi)) # dp --
+                if turn:
+                    memoX[boardTuple] = copy.deepcopy(result)
+                else:
+                    memoO[boardTuple] = copy.deepcopy(result)
                 bestScore = result
                 bestMove = i
-    memo[boardTuple] = bestMove
     return bestMove
 
 def bestPlay(board, turnAi, change, p, inv):
-    boardTuple = tuple(tuple(row) for row in board)
-    if boardTuple in memo:
-        return memo[boardTuple]
+    boardTuple = tuple(tuple(row) for row in copy.deepcopy(board)) # dp --
+    if boardTuple in memoX and turn: #
+        return memoX[boardTuple] # --
+    if boardTuple in memoO and not turn:
+        return memoO[boardTuple]
     boardrec = copy.deepcopy(board)
     state = checkState(boardrec)
     if state == p:
@@ -166,11 +171,17 @@ def bestPlay(board, turnAi, change, p, inv):
     if len(validMoves) == 0: return 0
     for i in validMoves:
         bp.append(bestPlay(makeMove(boardrec, turnAi, i, change),abs(turnAi-1), change, p, inv))
-    if turn == turnAi: 
-        memo[boardTuple] = max(bp)
+    if turn == turnAi:
+        if turn: 
+            memoX[boardTuple] = copy.deepcopy(max(bp)) # dp --
+        else:
+            memoO[boardTuple] = copy.deepcopy(max(bp))
         return max(bp)
     else:
-        memo[boardTuple] = min(bp) 
+        if turn:
+            memoX[boardTuple] = copy.deepcopy(min(bp)) # dp --
+        else:
+            memoO[boardTuple] = copy.deepcopy(min(bp)) # dp --
         return min(bp)
         
 
@@ -178,7 +189,8 @@ player1won = 0
 player2won = 0
 draw = 0
 change = 0
-memo = {}
+memoX = {}
+memoO = {}
 
 while player1won+player2won+draw<100: # game loop
     board = newBoard()
